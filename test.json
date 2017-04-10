@@ -1,0 +1,11 @@
+{
+"header":["id","name","age","phone","address"],
+"records":[
+{"id":"1","name":"nico","age":"17","phone":"187","address":"aa"},
+{"id":"2","age":"18","name":"dico","phone":"183","address":"bb"},
+{"id":"3","age":"19","phone":"182","name":"aico","address":"cc"},
+{"id":"4","age":"10","phone":"184","address":"dd","name":"cico"},
+{"name":"vico","id":"5","age":"16","phone":"187","address":"ee"},
+{"id":"6","name":"yico","age":"15","phone":"188","address":"ff"},
+]
+}

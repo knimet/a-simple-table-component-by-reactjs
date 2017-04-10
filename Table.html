@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" >
+<script src="https://cdn.bootcss.com/react/15.4.2/react.min.js"></script>
+<script src="https://cdn.bootcss.com/react/15.4.2/react-dom.min.js"></script>
+<script src="https://cdn.bootcss.com/babel-standalone/6.22.1/babel.min.js"></script>
+<style>
+    table{
+    	width:80%;
+    	margin:0 auto;
+    }
+    td,th{
+    	border:1px solid black;
+    }
+    td{
+    	text-align:center;
+    }
+    div{
+    	margin-top:30px;
+    }
+</style>
+<title>a simple table component by reactjs</title>
+</head>
+<body>
+
+	<p>The component Table need a property "datafrom" to get data it will show in a JSON form which has keys:"header" and "records".
+	<br>It should be a relative path or a absolute path.
+	<br>Table with property "datafrom='test.json'" shown as follow.
+	<p>
+
+	<div id="example"></div>
+<script type="text/babel">
+
+var Table = React.createClass({
+  	getInitialState: function() {
+		{
+			var url = this.props.datafrom; 
+			var xmlhttp;
+			if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+  				xmlhttp=new XMLHttpRequest();
+  			}else{// code for IE6, IE5
+				xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			xmlhttp.open("GET",url,false);//sync
+			xmlhttp.send(null);
+			if(xmlhttp.status >=200 && xmlhttp.status<300 || xmlhttp.status == 304){
+				var data = eval('(' + xmlhttp.responseText + ')');
+				var header = data.header;
+				var records = data.records;
+				return {
+      				header:header,
+      				records:records
+				}
+			}else{
+				console.log("error during ajax");
+				var header = ["error"];
+				var records = [{"error":"error during ajax"}];
+				return {
+      				header:header,
+      				records:records
+				}
+			}
+		}  
+	},
+ 
+	render: function() {
+		var rows = [];
+		var records = this.state.records;
+		for (var i=0; i < records.length; i++) {
+    		rows.push(<TableRow record={this.state.records[i]} header={this.state.header}/>);
+		}
+		return (
+				<table>
+					<TableHeader header={this.state.header}/>
+					{
+						rows
+					}
+				</table>
+		);
+	}
+});
+ 
+ 
+var TableRow = React.createClass({
+	getInitialState: function() {
+		{
+			var record = this.props.record;
+			var header = this.props.header;
+			return {
+      			record:record,
+      			header:header
+			}
+		}  
+	},
+	render:function(){
+		var record = this.state.record;
+		var header = this.state.header;
+		var tds = [];
+		for (var i=0; i < header.length; i++) {
+    		tds.push(<td>{record[header[i]]}</td>);
+		}
+		return <tr>{tds}</tr>;
+    }
+});
+
+
+
+
+
+
+
+
+var TableHeader = React.createClass({
+	getInitialState: function() {
+		{
+			var header = this.props.header;
+			return {
+      			header:header
+			}
+		}  
+	},
+	render:function(){
+		var header = this.state.header;
+		return <tr>{
+			header.map(function(item){
+				return <th>{item}</th>;
+        	})
+        }</tr>;
+	}
+})
+
+ReactDOM.render(
+  <Table datafrom="test.json" />,
+  document.getElementById('example')
+);
+</script>
+</body>
+</html>
