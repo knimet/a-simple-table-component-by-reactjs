@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" >
+<script src="https://cdn.bootcss.com/react/15.4.2/react.min.js"></script>
+<script src="https://cdn.bootcss.com/react/15.4.2/react-dom.min.js"></script>
+<script src="https://cdn.bootcss.com/babel-standalone/6.22.1/babel.min.js"></script>
+<style>
+    table{
+    	width:80%;
+    	margin:0 auto;
+    }
+    td,th{
+    	border:1px solid black;
+    }
+    td{
+    	text-align:center;
+    }
+    div{
+    	margin-top:30px;
+    }
+    input{
+    	border:none;
+    	margin:0 auto;
+		width:90%;
+		height:100%;
+		margin-right:1px;
+		text-align:center;
+		line-height:100%;
+	}
+	.toolbar{
+		width:80%;
+    	margin:0 auto;
+    	margin-top:20px;
+		display:flex;
+		flex-direction:row;
+		justify-content:space-around;
+	}
+	button{
+		width:160px;
+		height:30px;
+	}
+</style>
+<title>a simple editable table component with toolbar by reactjs</title>
+</head>
+<body>
+
+	<p>an editable table with toolbar
+	<p>
+
+	<div id="example"></div>
+	<div id="example2"></div>
+<script type="text/babel">
+
+var Table = React.createClass({
+  	getInitialState: function() {
+		{
+			var url = this.props.datafrom; 
+			var xmlhttp;
+			if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+  				xmlhttp=new XMLHttpRequest();
+  			}else{// code for IE6, IE5
+				xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			xmlhttp.open("GET",url,false);//sync
+			xmlhttp.send(null);
+			if(xmlhttp.status >=200 && xmlhttp.status<300 || xmlhttp.status == 304){
+				var data = eval('(' + xmlhttp.responseText + ')');
+				var header = data.header;
+				var records = data.records;
+				var toolbar = data.toolbar;
+				return {
+      				header:header,
+      				records:records,
+      				toolbar:toolbar
+				}
+			}else{
+				console.log("error during ajax");
+				var header = ["error"];
+				var records = [{"error":"error during ajax"}];
+				return {
+      				header:header,
+      				records:records
+				}
+			}
+		}  
+	},
+ 
+	render: function() {
+		var rows = [];
+		var records = this.state.records;
+		for (var i=0; i < records.length; i++) {
+    		rows.push(<TableRow record={this.state.records[i]} header={this.state.header}/>);
+		}
+		
+		return (<div>
+				<table>
+					<TableHeader header={this.state.header}/>
+					{
+						rows
+					}
+					
+				</table>
+				<Toolbar toolbar={this.state.toolbar}/>
+				</div>
+		);
+	}
+});
+ 
+ 
+var TableRow = React.createClass({
+	getInitialState: function() {
+		{
+			var record = this.props.record;
+			var header = this.props.header;
+			return {
+      			record:record,
+      			header:header
+			}
+		}  
+	},
+	render:function(){
+		var record = this.state.record;
+		var header = this.state.header;
+		var tds = [];
+		for (var i=0; i < header.length; i++) {
+    		tds.push(<td><input type="text" value={record[header[i]]}/></td>);
+		}
+		return <tr>{tds}</tr>;
+    }
+});
+
+
+var Toolbar = React.createClass({
+	render:function(){
+		var toolbar = this.props.toolbar;
+		var tbs = []; 
+		for (let t in toolbar) {
+    		tbs.push(<button>{toolbar[t]}</button>);
+		}
+		return <div className="toolbar">{tbs}</div>;
+    }
+});
+
+
+
+
+
+var TableHeader = React.createClass({
+	componentWillReceiveProps:function(){alert("the header is going to receive new props");},
+	getInitialState: function() {
+		{
+			var header = this.props.header;
+			return {
+      			header:header
+			}
+		}  
+	},
+	render:function(){
+		var header = this.state.header;
+		return <tr>{
+			header.map(function(item){
+				return <th>{item}</th>;
+        	})
+        }</tr>;
+	}
+})
+
+ReactDOM.render(
+  <Table datafrom="toolbartable.json" />,
+  document.getElementById('example')
+);
+ReactDOM.render(
+  <Table datafrom="test2.json" />,
+  document.getElementById('example2')
+);
+</script>
+</body>
+</html>
