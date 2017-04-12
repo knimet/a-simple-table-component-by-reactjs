@@ -40,6 +40,9 @@
 		width:160px;
 		height:30px;
 	}
+	.test{
+		background-color:yellow;
+	}
 </style>
 <title>a simple editable table component with toolbar by reactjs</title>
 </head>
@@ -51,39 +54,22 @@
 	<div id="example"></div>
 	<div id="example2"></div>
 <script type="text/babel">
-
 var Table = React.createClass({
   	getInitialState: function() {
-		{
-			var url = this.props.datafrom; 
-			var xmlhttp;
-			if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-  				xmlhttp=new XMLHttpRequest();
-  			}else{// code for IE6, IE5
-				xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			var tableInfo = this.getTableInfo();
+			if(tableInfo.error != undefined){
+				console.log(tableInfo.error);
+				return {};
 			}
-			xmlhttp.open("GET",url,false);//sync
-			xmlhttp.send(null);
-			if(xmlhttp.status >=200 && xmlhttp.status<300 || xmlhttp.status == 304){
-				var data = eval('(' + xmlhttp.responseText + ')');
-				var header = data.header;
-				var records = data.records;
-				var toolbar = data.toolbar;
-				return {
-      				header:header,
-      				records:records,
-      				toolbar:toolbar
-				}
-			}else{
-				console.log("error during ajax");
-				var header = ["error"];
-				var records = [{"error":"error during ajax"}];
-				return {
-      				header:header,
-      				records:records
-				}
+			var data = eval('(' + tableInfo + ')');
+			var header = data.header;
+			var records = data.records;
+			var toolbar = data.toolbar;
+			return {
+      			header:header,
+      			records:records,
+      			toolbar:toolbar
 			}
-		}  
 	},
  
 	render: function() {
@@ -101,9 +87,79 @@ var Table = React.createClass({
 					}
 					
 				</table>
-				<Toolbar toolbar={this.state.toolbar}/>
+				<Toolbar toolbar={this.state.toolbar} addRecord={this.addRecord} refreshTable={this.refreshTable} submitTable={this.submitTable}/>
 				</div>
 		);
+	},
+	getTableInfo:function(){
+		var url = this.props.datafrom; 
+		var xmlhttp;
+		if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+  			xmlhttp=new XMLHttpRequest();
+  		}else{// code for IE6, IE5
+			xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		xmlhttp.open("GET",url,false);//sync
+		xmlhttp.send(null);
+		if(xmlhttp.status >=200 && xmlhttp.status<300 || xmlhttp.status == 304){
+			return xmlhttp.responseText;
+		}else{
+			return {"error":"error during ajax"};
+		}
+	},
+	addRecord:function(){
+		var header = this.state.header;
+		var record = {};
+		for(let i in header){
+			let head = header[i];
+			record[head] = "";
+		}
+		var records = this.state.records;
+		var length = records.length;
+		records[length] = record;
+		this.setState({records:records});
+	},
+	refreshTable:function(){ // bug here, status 304
+		var tableInfo = this.getTableInfo();
+			if(tableInfo.error != undefined){
+				console.log(tableInfo.error);
+				return {};
+			}
+			var data = eval('(' + tableInfo + ')');
+			var header = data.header;
+			var records = data.records;
+			var toolbar = data.toolbar;
+			this.setState( {
+      			header:header,
+      			records:records,
+      			toolbar:toolbar
+			});
+	},
+	submitTable:function(url){  //bug here
+		//var dataSend = JSON.stringify({ "params": '' + JSON.stringify(this.state) + '' });
+		var dataSend = (function(obj){ // code from https://www.oschina.net/code/snippet_865986_48326
+    		var str = "";
+ 
+    		for(var prop in obj){
+        		str += prop + "=" + obj[prop] + "&"
+    		}
+    		return str;
+		})(this.state);
+		alert(dataSend);
+		var xmlhttp;
+		if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+  			xmlhttp=new XMLHttpRequest();
+  		}else{// code for IE6, IE5
+			xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		xmlhttp.open("POST","initRecords.action",false);//sync
+		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		xmlhttp.send(dataSend);
+		if(xmlhttp.status >=200 && xmlhttp.status<300 || xmlhttp.status == 304){
+			return xmlhttp.responseText;
+		}else{
+			return {"error":"error during ajax"};
+		}
 	}
 });
  
@@ -115,7 +171,7 @@ var TableRow = React.createClass({
 			var header = this.props.header;
 			return {
       			record:record,
-      			header:header
+      			header:header,
 			}
 		}  
 	},
@@ -136,7 +192,24 @@ var Toolbar = React.createClass({
 		var toolbar = this.props.toolbar;
 		var tbs = []; 
 		for (let t in toolbar) {
-    		tbs.push(<button>{toolbar[t]}</button>);
+			var tool = toolbar[t];
+			switch(tool){
+				case "add":
+					tbs.push(<button onClick={this.props.addRecord}>{toolbar[t]}</button>);
+					break;
+				case "delete":
+					tbs.push(<button onClick={this.props.deleteRecord}>{toolbar[t]}</button>);
+					break;
+				case "submit":
+					tbs.push(<button onClick={this.props.submitTable}>{toolbar[t]}</button>);
+					break;
+				case "refresh":
+					tbs.push(<button onClick={this.props.refreshTable}>{toolbar[t]}</button>);
+					break;
+				default:
+					console.log("error");
+			}
+    		
 		}
 		return <div className="toolbar">{tbs}</div>;
     }
@@ -147,7 +220,6 @@ var Toolbar = React.createClass({
 
 
 var TableHeader = React.createClass({
-	componentWillReceiveProps:function(){alert("the header is going to receive new props");},
 	getInitialState: function() {
 		{
 			var header = this.props.header;
